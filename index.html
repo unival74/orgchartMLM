@@ -550,12 +550,14 @@
         }
 
         function exportData() {
-            let csv = 'ID\t名前\t上司ID\n';
+            let csv = 'ID,名前,上司ID\n';
             orgData.forEach(item => {
-                csv += `${item['ID']}\t${item['名前']}\t${item['上司ID']}\n`;
+                csv += `${item['ID']},${item['名前']},${item['上司ID']}\n`;
             });
             
-            const blob = new Blob([csv], { type: 'text/tab-separated-values' });
+            // BOM付きUTF-8で保存（Excel互換）
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -581,7 +583,7 @@
                 for (let i = 1; i < lines.length; i++) {
                     if (lines[i].trim() === '') continue;
                     
-                    const parts = lines[i].split('\t');
+                    const parts = lines[i].split(',');
                     newData.push({
                         'ID': parts[0].trim(),
                         '名前': parts[1].trim(),
@@ -598,7 +600,6 @@
             };
             reader.readAsText(file);
             
-            // ファイル入力をリセット
             event.target.value = '';
         }
 
