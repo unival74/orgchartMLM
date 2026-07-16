@@ -103,6 +103,8 @@
             margin-bottom: 30px;
             padding-bottom: 15px;
             border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
         .header h1 {
@@ -110,11 +112,32 @@
             font-size: 24px;
         }
         
-        .logout-btn {
-            background-color: #f44336;
+        .user-info {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .logout-btn, .add-btn {
             padding: 10px 20px;
             font-size: 14px;
             width: auto;
+        }
+        
+        .add-btn {
+            background-color: #2196F3;
+        }
+        
+        .add-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .logout-btn {
+            background-color: #f44336;
         }
         
         .logout-btn:hover {
@@ -142,6 +165,7 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .node-box:hover {
@@ -158,6 +182,22 @@
         .node-box p {
             font-size: 12px;
             color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .node-delete-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .node-delete-btn:hover {
+            background-color: #e68900;
         }
         
         .node-children {
@@ -166,6 +206,62 @@
             gap: 30px;
             margin-top: 30px;
             justify-content: center;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+        }
+        
+        .cancel-btn {
+            background-color: #999;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #777;
         }
         
         @media (max-width: 768px) {
@@ -186,6 +282,15 @@
                 min-width: 120px;
                 padding: 12px 15px;
             }
+            
+            .header-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .header-buttons button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -196,11 +301,11 @@
                 <h1>組織図管理</h1>
                 <div class="form-group">
                     <label for="username">ユーザー名</label>
-                    <input type="text" id="username" placeholder="ユーザー名を入力">
+                    <input type="text" id="username" placeholder="admin1">
                 </div>
                 <div class="form-group">
                     <label for="password">パスワード</label>
-                    <input type="password" id="password" placeholder="パスワードを入力">
+                    <input type="password" id="password" placeholder="pass123">
                 </div>
                 <button onclick="login()">ログイン</button>
                 <div class="error" id="loginError"></div>
@@ -209,30 +314,67 @@
         
         <div class="org-chart-screen" id="orgChartScreen">
             <div class="header">
-                <h1>組織図</h1>
-                <button class="logout-btn" onclick="logout()">ログアウト</button>
+                <div>
+                    <h1>組織図</h1>
+                    <p class="user-info" id="userInfo"></p>
+                </div>
+                <div class="header-buttons">
+                    <button class="add-btn" onclick="openAddModal()" id="addBtn" style="display:none;">メンバー追加</button>
+                    <button class="logout-btn" onclick="logout()">ログアウト</button>
+                </div>
             </div>
             <div class="org-tree" id="orgTree"></div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddModal()">&times;</span>
+            <h2>メンバーを追加</h2>
+            <div class="form-group">
+                <label for="newId">ID</label>
+                <input type="number" id="newId" placeholder="例：5">
+            </div>
+            <div class="form-group">
+                <label for="newName">名前</label>
+                <input type="text" id="newName" placeholder="例：鈴木太郎">
+            </div>
+            <div class="form-group">
+                <label for="newBossId">上司ID</label>
+                <input type="number" id="newBossId" placeholder="例：1">
+            </div>
+            <div class="error" id="addError"></div>
+            <div class="modal-buttons">
+                <button onclick="addMember()">追加</button>
+                <button class="cancel-btn" onclick="closeAddModal()">キャンセル</button>
+            </div>
         </div>
     </div>
 
     <script>
         const SHEET_ID = '12bsCQxTUBSDi3BTzNcEpBb1ZmJAlxOgei2LK7-mKzC8';
         
+        // Google Sheets のユーザーデータシート（gid=0）
+        const userSheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+        
+        // Google Sheets の組織図シート（gid=1）
+        const orgSheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1`;
+
         let currentUser = null;
         let orgData = [];
         let userData = [];
 
+        // CSV をJSON に変換
         function csvToJson(csvText) {
             const lines = csvText.trim().split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
+            const headers = lines[0].split('\t').map(h => h.trim());
             const jsonData = [];
             
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim() === '') continue;
                 
                 const obj = {};
-                const currentLine = lines[i].split(',');
+                const currentLine = lines[i].split('\t');
                 
                 for (let j = 0; j < headers.length; j++) {
                     obj[headers[j]] = currentLine[j] ? currentLine[j].trim() : '';
@@ -242,22 +384,45 @@
             return jsonData;
         }
 
-        async function fetchSheetData(sheetName) {
+        // Google Sheets からデータを取得
+        async function fetchUserData() {
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/query?tqx=out:csv&sheet=${sheetName}`;
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error('データ取得失敗');
-                }
-                
+                const response = await fetch(userSheetUrl);
                 const csvText = await response.text();
-                return csvToJson(csvText);
+                userData = csvToJson(csvText);
+                console.log('ユーザーデータ:', userData);
+                return userData;
             } catch (error) {
-                console.error('エラー:', error);
-                alert('データ取得エラー: ' + error.message);
+                console.error('ユーザーデータ取得エラー:', error);
+                alert('ユーザーデータの取得に失敗しました');
                 return [];
             }
+        }
+
+        async function fetchOrgData() {
+            try {
+                const response = await fetch(orgSheetUrl);
+                const csvText = await response.text();
+                orgData = csvToJson(csvText);
+                console.log('組織図データ:', orgData);
+                saveOrgData();
+                return orgData;
+            } catch (error) {
+                console.error('組織図データ取得エラー:', error);
+                return loadOrgData();
+            }
+        }
+
+        function saveOrgData() {
+            localStorage.setItem('orgData', JSON.stringify(orgData));
+        }
+
+        function loadOrgData() {
+            const saved = localStorage.getItem('orgData');
+            if (saved) {
+                orgData = JSON.parse(saved);
+            }
+            return orgData;
         }
 
         async function login() {
@@ -271,7 +436,7 @@
             }
             
             try {
-                userData = await fetchSheetData('ユーザー');
+                await fetchUserData();
                 
                 const user = userData.find(u => 
                     u['ユーザー名'] === username && u['パスワード'] === password
@@ -285,30 +450,31 @@
                     errorDiv.textContent = 'ユーザー名またはパスワードが正しくありません';
                 }
             } catch (error) {
-                console.error('エラー:', error);
+                console.error('ログインエラー:', error);
                 errorDiv.textContent = 'ログインエラーが発生しました';
             }
         }
 
         async function showOrgChart() {
+            await fetchOrgData();
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('orgChartScreen').style.display = 'block';
             
-            try {
-                orgData = await fetchSheetData('組織図');
-                console.log('取得データ:', orgData);
-                displayOrgChart();
-            } catch (error) {
-                console.error('エラー:', error);
-                alert('組織図の読み込みに失敗しました');
+            const userInfo = document.getElementById('userInfo');
+            userInfo.textContent = `ユーザー: ${currentUser['ユーザー名']} (${currentUser['権限']})`;
+            
+            if (currentUser['権限'] === 'admin') {
+                document.getElementById('addBtn').style.display = 'block';
             }
+            
+            displayOrgChart();
         }
 
         function displayOrgChart() {
             const orgTree = document.getElementById('orgTree');
             orgTree.innerHTML = '';
             
-            const ceos = orgData.filter(org => org['上司ID'] === '0' || org['上司ID'] === '' || !org['上司ID']);
+            const ceos = orgData.filter(org => org['上司ID'] === '0' || org['上司ID'] === 0);
             
             ceos.forEach(ceo => {
                 orgTree.appendChild(createTreeNode(ceo));
@@ -323,14 +489,27 @@
             nodeBox.className = 'node-box';
             
             const name = document.createElement('h3');
-            name.textContent = org['名前'] || '名前なし';
+            name.textContent = org['名前'];
             
             const id = document.createElement('p');
             id.textContent = `ID: ${org['ID']}`;
             
             nodeBox.appendChild(name);
             nodeBox.appendChild(id);
+            
+            if (currentUser['権限'] === 'admin') {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'node-delete-btn';
+                deleteBtn.textContent = '削除';
+                deleteBtn.onclick = () => deleteMember(org['ID']);
+                nodeBox.appendChild(deleteBtn);
+            }
+            
             nodeDiv.appendChild(nodeBox);
+            
+            if (currentUser['権限'] === 'general' && org['ID'] !== currentUser['組織ID']) {
+                return nodeDiv;
+            }
             
             const subordinates = orgData.filter(o => o['上司ID'] === org['ID']);
             
@@ -348,6 +527,53 @@
             return nodeDiv;
         }
 
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+            document.getElementById('addError').textContent = '';
+            document.getElementById('newId').value = '';
+            document.getElementById('newName').value = '';
+            document.getElementById('newBossId').value = '';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        function addMember() {
+            const id = document.getElementById('newId').value;
+            const name = document.getElementById('newName').value;
+            const bossId = document.getElementById('newBossId').value;
+            const errorDiv = document.getElementById('addError');
+            
+            if (!id || !name || !bossId) {
+                errorDiv.textContent = 'すべての項目を入力してください';
+                return;
+            }
+            
+            if (orgData.find(org => org['ID'] === id)) {
+                errorDiv.textContent = 'このIDは既に使用されています';
+                return;
+            }
+            
+            orgData.push({
+                'ID': id,
+                '名前': name,
+                '上司ID': bossId
+            });
+            
+            saveOrgData();
+            closeAddModal();
+            displayOrgChart();
+        }
+
+        function deleteMember(id) {
+            if (confirm('このメンバーを削除しますか？')) {
+                orgData = orgData.filter(org => org['ID'] !== id);
+                saveOrgData();
+                displayOrgChart();
+            }
+        }
+
         function logout() {
             currentUser = null;
             document.getElementById('orgChartScreen').style.display = 'none';
@@ -356,6 +582,17 @@
             document.getElementById('password').value = '';
             document.getElementById('loginError').textContent = '';
         }
+
+        window.onload = function() {
+            loadOrgData();
+        };
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('addModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>
