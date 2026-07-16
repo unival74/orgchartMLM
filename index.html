@@ -120,11 +120,12 @@
         .header-buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
-        .logout-btn, .add-btn {
-            padding: 10px 20px;
-            font-size: 14px;
+        .header-buttons button {
+            padding: 10px 15px;
+            font-size: 13px;
             width: auto;
         }
         
@@ -134,6 +135,22 @@
         
         .add-btn:hover {
             background-color: #0b7dda;
+        }
+        
+        .export-btn {
+            background-color: #4CAF50;
+        }
+        
+        .export-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .import-btn {
+            background-color: #FF9800;
+        }
+        
+        .import-btn:hover {
+            background-color: #e68900;
         }
         
         .logout-btn {
@@ -165,7 +182,6 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
         }
         
         .node-box:hover {
@@ -264,6 +280,10 @@
             background-color: #777;
         }
         
+        #fileInput {
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -320,6 +340,8 @@
                 </div>
                 <div class="header-buttons">
                     <button class="add-btn" onclick="openAddModal()" id="addBtn" style="display:none;">メンバー追加</button>
+                    <button class="export-btn" onclick="exportData()" id="exportBtn" style="display:none;">エクスポート</button>
+                    <button class="import-btn" onclick="importData()" id="importBtn" style="display:none;">インポート</button>
                     <button class="logout-btn" onclick="logout()">ログアウト</button>
                 </div>
             </div>
@@ -351,81 +373,39 @@
         </div>
     </div>
 
-    <script>
-        const SHEET_ID = '12bsCQxTUBSDi3BTzNcEpBb1ZmJAlxOgei2LK7-mKzC8';
-        
-        // Google Sheets のユーザーデータシート（gid=0）
-        const userSheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-        
-        // Google Sheets の組織図シート（gid=1）
-        const orgSheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1`;
+    <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)">
 
+    <script>
+        const initialUserData = [
+            { 'ユーザー名': 'admin1', 'パスワード': 'pass123', '権限': 'admin', '組織ID': '1' },
+            { 'ユーザー名': 'user1', 'パスワード': 'pass456', '権限': 'general', '組織ID': '2' }
+        ];
+
+        const initialOrgData = [
+            { 'ID': '1', '名前': '山田太郎', '上司ID': '0' },
+            { 'ID': '2', '名前': '佐藤花子', '上司ID': '1' },
+            { 'ID': '3', '名前': '鈴木次郎', '上司ID': '1' },
+            { 'ID': '4', '名前': '田中美咲', '上司ID': '2' }
+        ];
+        
         let currentUser = null;
         let orgData = [];
-        let userData = [];
 
-        // CSV をJSON に変換
-        function csvToJson(csvText) {
-            const lines = csvText.trim().split('\n');
-            const headers = lines[0].split('\t').map(h => h.trim());
-            const jsonData = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
-                
-                const obj = {};
-                const currentLine = lines[i].split('\t');
-                
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = currentLine[j] ? currentLine[j].trim() : '';
-                }
-                jsonData.push(obj);
-            }
-            return jsonData;
-        }
-
-        // Google Sheets からデータを取得
-        async function fetchUserData() {
-            try {
-                const response = await fetch(userSheetUrl);
-                const csvText = await response.text();
-                userData = csvToJson(csvText);
-                console.log('ユーザーデータ:', userData);
-                return userData;
-            } catch (error) {
-                console.error('ユーザーデータ取得エラー:', error);
-                alert('ユーザーデータの取得に失敗しました');
-                return [];
-            }
-        }
-
-        async function fetchOrgData() {
-            try {
-                const response = await fetch(orgSheetUrl);
-                const csvText = await response.text();
-                orgData = csvToJson(csvText);
-                console.log('組織図データ:', orgData);
-                saveOrgData();
-                return orgData;
-            } catch (error) {
-                console.error('組織図データ取得エラー:', error);
-                return loadOrgData();
-            }
-        }
-
-        function saveOrgData() {
-            localStorage.setItem('orgData', JSON.stringify(orgData));
-        }
-
-        function loadOrgData() {
+        function loadData() {
             const saved = localStorage.getItem('orgData');
             if (saved) {
                 orgData = JSON.parse(saved);
+            } else {
+                orgData = JSON.parse(JSON.stringify(initialOrgData));
+                saveData();
             }
-            return orgData;
         }
 
-        async function login() {
+        function saveData() {
+            localStorage.setItem('orgData', JSON.stringify(orgData));
+        }
+
+        function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
@@ -435,28 +415,21 @@
                 return;
             }
             
-            try {
-                await fetchUserData();
-                
-                const user = userData.find(u => 
-                    u['ユーザー名'] === username && u['パスワード'] === password
-                );
-                
-                if (user) {
-                    currentUser = user;
-                    errorDiv.textContent = '';
-                    showOrgChart();
-                } else {
-                    errorDiv.textContent = 'ユーザー名またはパスワードが正しくありません';
-                }
-            } catch (error) {
-                console.error('ログインエラー:', error);
-                errorDiv.textContent = 'ログインエラーが発生しました';
+            const user = initialUserData.find(u => 
+                u['ユーザー名'] === username && u['パスワード'] === password
+            );
+            
+            if (user) {
+                currentUser = user;
+                errorDiv.textContent = '';
+                showOrgChart();
+            } else {
+                errorDiv.textContent = 'ユーザー名またはパスワードが正しくありません';
             }
         }
 
-        async function showOrgChart() {
-            await fetchOrgData();
+        function showOrgChart() {
+            loadData();
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('orgChartScreen').style.display = 'block';
             
@@ -465,6 +438,8 @@
             
             if (currentUser['権限'] === 'admin') {
                 document.getElementById('addBtn').style.display = 'block';
+                document.getElementById('exportBtn').style.display = 'block';
+                document.getElementById('importBtn').style.display = 'block';
             }
             
             displayOrgChart();
@@ -474,7 +449,7 @@
             const orgTree = document.getElementById('orgTree');
             orgTree.innerHTML = '';
             
-            const ceos = orgData.filter(org => org['上司ID'] === '0' || org['上司ID'] === 0);
+            const ceos = orgData.filter(org => org['上司ID'] === '0');
             
             ceos.forEach(ceo => {
                 orgTree.appendChild(createTreeNode(ceo));
@@ -561,7 +536,7 @@
                 '上司ID': bossId
             });
             
-            saveOrgData();
+            saveData();
             closeAddModal();
             displayOrgChart();
         }
@@ -569,9 +544,62 @@
         function deleteMember(id) {
             if (confirm('このメンバーを削除しますか？')) {
                 orgData = orgData.filter(org => org['ID'] !== id);
-                saveOrgData();
+                saveData();
                 displayOrgChart();
             }
+        }
+
+        function exportData() {
+            let csv = 'ID\t名前\t上司ID\n';
+            orgData.forEach(item => {
+                csv += `${item['ID']}\t${item['名前']}\t${item['上司ID']}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/tab-separated-values' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orgdata.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csv = e.target.result;
+                const lines = csv.trim().split('\n');
+                const newData = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    const parts = lines[i].split('\t');
+                    newData.push({
+                        'ID': parts[0].trim(),
+                        '名前': parts[1].trim(),
+                        '上司ID': parts[2].trim()
+                    });
+                }
+                
+                if (newData.length > 0) {
+                    orgData = newData;
+                    saveData();
+                    displayOrgChart();
+                    alert('データをインポートしました');
+                }
+            };
+            reader.readAsText(file);
+            
+            // ファイル入力をリセット
+            event.target.value = '';
         }
 
         function logout() {
@@ -584,7 +612,7 @@
         }
 
         window.onload = function() {
-            loadOrgData();
+            loadData();
         };
 
         window.onclick = function(event) {
@@ -596,3 +624,4 @@
     </script>
 </body>
 </html>
+
