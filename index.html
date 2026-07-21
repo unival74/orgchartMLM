@@ -8,22 +8,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 10px; }
         .container { max-width: 100%; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.1); padding: 20px; }
-        
         .screen { display: none !important; }
         .screen.active { display: block !important; }
-        
-        .login-screen { 
-            min-height: 100vh; 
-            display: flex !important; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-        }
-        
-        .login-screen.active {
-            display: flex !important;
-        }
-        
+        .login-screen { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-screen.active { display: flex !important; }
         .login-form { width: 100%; max-width: 300px; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,.1); }
         .login-form h1 { font-size: 24px; margin-bottom: 20px; text-align: center; color: #333; }
         .form-group { margin-bottom: 15px; }
@@ -35,13 +23,11 @@
         .success { color: #4CAF50; font-size: 12px; margin-top: 10px; }
         .toggle-link { text-align: center; margin-top: 15px; font-size: 12px; }
         .toggle-link a { color: #2196F3; cursor: pointer; text-decoration: underline; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; flex-wrap: wrap; gap: 10px; }
         .header h1 { color: #333; font-size: 20px; flex: 1; }
         .user-info { font-size: 12px; color: #666; }
         .button-group-header { display: flex; gap: 10px; flex-wrap: wrap; }
-        .button-group-header button { padding: 8px 12px; font-size: 12px; }
-        
+        .button-group-header button { padding: 8px 12px; font-size: 12px; flex: 1; }
         .org-tree { overflow-x: auto; padding: 20px 0; }
         .tree-node { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
         .node-box { background: #e3f2fd; border: 2px solid #2196F3; border-radius: 6px; padding: 12px 15px; min-width: 140px; text-align: center; transition: all .3s; }
@@ -51,7 +37,6 @@
         .node-box .user-id { font-size: 10px; color: #999; }
         .node-children { display: flex; gap: 20px; margin-top: 20px; justify-content: center; flex-wrap: wrap; }
         .child-label { font-size: 10px; color: #999; font-weight: 500; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal.active { display: flex; }
         .modal-content { background: #fff; padding: 25px; border-radius: 8px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; }
@@ -59,7 +44,6 @@
         .modal-content .form-group { margin-bottom: 15px; }
         .modal-content button { margin-top: 15px; }
         .modal-close { text-align: right; cursor: pointer; color: #999; font-size: 20px; margin-bottom: 10px; }
-        
         @media (max-width: 768px) {
             .container { padding: 10px; }
             .login-form { max-width: 100%; }
@@ -76,7 +60,6 @@
         <div class="screen login-screen active" id="loginScreen">
             <div class="login-form">
                 <h1>組織図管理</h1>
-                
                 <div id="loginTab">
                     <div class="form-group">
                         <label for="loginUsername">ユーザー名</label>
@@ -88,11 +71,8 @@
                     </div>
                     <button onclick="login()">ログイン</button>
                     <div class="error" id="loginError"></div>
-                    <div class="toggle-link">
-                        新規ユーザーは <a onclick="toggleRegisterTab()">こちら</a>
-                    </div>
+                    <div class="toggle-link">新規ユーザーは <a onclick="toggleRegisterTab()">こちら</a></div>
                 </div>
-                
                 <div id="registerTab" style="display: none;">
                     <div class="form-group">
                         <label for="regUsername">ユーザー名</label>
@@ -104,81 +84,44 @@
                     </div>
                     <div class="form-group">
                         <label for="regBoss">上司を選択</label>
-                        <select id="regBoss">
-                            <option value="">-- 上司を選択してください --</option>
-                        </select>
+                        <select id="regBoss"><option value="">-- 上司を選択してください --</option></select>
                     </div>
                     <button onclick="registerUser()">登録</button>
                     <div class="error" id="registerError"></div>
                     <div class="success" id="registerSuccess"></div>
-                    <div class="toggle-link">
-                        ログインは <a onclick="toggleRegisterTab()">こちら</a>
-                    </div>
+                    <div class="toggle-link"><a onclick="toggleRegisterTab()">ログインはこちら</a></div>
                 </div>
             </div>
         </div>
-        
         <div class="screen" id="orgChartScreen">
             <div class="header">
-                <div>
-                    <h1>組織図</h1>
-                    <p class="user-info" id="userInfo"></p>
-                </div>
+                <div><h1>組織図</h1><p class="user-info" id="userInfo"></p></div>
                 <div class="button-group-header" id="adminButtons" style="display: none;">
                     <button onclick="openAddModal()">メンバー追加</button>
-                    <button onclick="openExportModal()">エクスポート</button>
-                    <button onclick="openImportModal()">インポート</button>
-                    <button class="logout-btn" onclick="logout()" style="background: #f44336;">ログアウト</button>
+                    <button onclick="logout()" style="background: #f44336;">ログアウト</button>
                 </div>
                 <button class="logout-btn" id="userLogoutBtn" onclick="logout()" style="background: #f44336; display: none;">ログアウト</button>
             </div>
             <div class="org-tree" id="orgTree"></div>
         </div>
     </div>
-    
-    <div class="modal" id="addMemberModal">
+    <div class="modal" id="addModal">
         <div class="modal-content">
-            <div class="modal-close" onclick="closeAddModal()">✕</div>
-            <h2>メンバーを追加</h2>
+            <div class="modal-close" onclick="closeAddModal()">×</div>
+            <h2>メンバー追加</h2>
             <div class="form-group">
                 <label for="newMemberName">名前</label>
-                <input type="text" id="newMemberName" placeholder="名前を入力">
+                <input type="text" id="newMemberName" placeholder="名前">
             </div>
             <div class="form-group">
                 <label for="newMemberBoss">上司を選択</label>
-                <select id="newMemberBoss">
-                    <option value="">-- 上司を選択してください --</option>
-                </select>
+                <select id="newMemberBoss"><option value="">-- 上司を選択してください --</option></select>
             </div>
             <button onclick="addMember()">追加</button>
-            <div class="error" id="addMemberError"></div>
+            <div class="error" id="addError"></div>
+            <div class="success" id="addSuccess"></div>
         </div>
     </div>
-    
-    <div class="modal" id="exportModal">
-        <div class="modal-content">
-            <div class="modal-close" onclick="closeExportModal()">✕</div>
-            <h2>データをエクスポート</h2>
-            <p>以下のボタンをクリックして CSV をダウンロードしてください。</p>
-            <button onclick="exportOrgData()">組織図データをエクスポート</button>
-            <button onclick="exportUserData()">ユーザーデータをエクスポート</button>
-        </div>
-    </div>
-    
-    <div class="modal" id="importModal">
-        <div class="modal-content">
-            <div class="modal-close" onclick="closeImportModal()">✕</div>
-            <h2>データをインポート</h2>
-            <div class="form-group">
-                <label for="importFile">CSV ファイルを選択</label>
-                <input type="file" id="importFile" accept=".csv">
-            </div>
-            <button onclick="importData()">インポート</button>
-            <div class="error" id="importError"></div>
-            <div class="success" id="importSuccess"></div>
-        </div>
-    </div>
-
     <script>
         let currentUser = null;
         let userData = [];
@@ -198,11 +141,11 @@
             ],
             registration: []
         };
-        
-        window.addEventListener('load', () => {
+
+        window.addEventListener('load', function() {
             initApp();
         });
-        
+
         function initApp() {
             const stored = localStorage.getItem('orgChartData');
             if (stored) {
@@ -211,7 +154,8 @@
                     userData = data.users || defaultData.users;
                     orgData = data.org || defaultData.org;
                     registrationData = data.registration || defaultData.registration;
-                } catch (e) {
+                } catch(e) {
+                    console.error('データ解析エラー:', e);
                     userData = defaultData.users;
                     orgData = defaultData.org;
                     registrationData = defaultData.registration;
@@ -224,7 +168,7 @@
             }
             populateBossDropdown();
         }
-        
+
         function saveData() {
             localStorage.setItem('orgChartData', JSON.stringify({
                 users: userData,
@@ -232,22 +176,27 @@
                 registration: registrationData
             }));
         }
-        
+
         function populateBossDropdown() {
             const bosses = orgData.map(o => ({ id: o['ID'], name: o['名前'] }));
             const options = bosses.map(b => `<option value="${b.id}">${b.name} (ID: ${b.id})</option>`).join('');
             document.getElementById('regBoss').innerHTML = '<option value="">-- 上司を選択してください --</option>' + options;
-            document.getElementById('newMemberBoss').innerHTML = '<option value="">-- 上司を選択してください --</option>' + options;
+            const newBossSelect = document.getElementById('newMemberBoss');
+            if (newBossSelect) {
+                newBossSelect.innerHTML = '<option value="">-- 上司を選択してください --</option>' + options;
+            }
         }
-        
+
         function toggleRegisterTab() {
-            document.getElementById('loginTab').style.display = document.getElementById('loginTab').style.display === 'none' ? 'block' : 'none';
-            document.getElementById('registerTab').style.display = document.getElementById('registerTab').style.display === 'none' ? 'block' : 'none';
+            const lt = document.getElementById('loginTab');
+            const rt = document.getElementById('registerTab');
+            lt.style.display = lt.style.display === 'none' ? 'block' : 'none';
+            rt.style.display = rt.style.display === 'none' ? 'block' : 'none';
             document.getElementById('loginError').textContent = '';
             document.getElementById('registerError').textContent = '';
             document.getElementById('registerSuccess').textContent = '';
         }
-        
+
         function login() {
             const u = document.getElementById('loginUsername').value.trim();
             const p = document.getElementById('loginPassword').value.trim();
@@ -257,13 +206,12 @@
                 err.textContent = 'ユーザー名とパスワードを入力してください';
                 return;
             }
-            
+
             let user = userData.find(x => x['ユーザー名'] === u && x['パスワード'] === p);
-            
             if (!user) {
                 user = registrationData.find(x => x['ユーザー名'] === u && x['パスワード'] === p);
             }
-            
+
             if (user) {
                 currentUser = user;
                 err.textContent = '';
@@ -272,7 +220,7 @@
                 err.textContent = 'ユーザー名またはパスワードが正しくありません';
             }
         }
-        
+
         function registerUser() {
             const u = document.getElementById('regUsername').value.trim();
             const p = document.getElementById('regPassword').value.trim();
@@ -282,35 +230,31 @@
             
             err.textContent = '';
             suc.textContent = '';
-            
+
             if (!u || !p || !bossId) {
                 err.textContent = '全てのフィールドを入力してください';
                 return;
             }
-            
+
             if (userData.find(x => x['ユーザー名'] === u) || registrationData.find(x => x['ユーザー名'] === u)) {
                 err.textContent = 'このユーザー名は既に使用されています';
                 return;
             }
-            
+
             const childrenCount = orgData.filter(o => o['上司ID'] === bossId).length;
             if (childrenCount >= 2) {
                 err.textContent = 'この上司の配下は既に満員です（最大2人まで）';
                 return;
             }
-            
-            const maxUserId = Math.max(
-                ...registrationData.map(r => {
-                    const match = r['ユーザーID']?.match(/U(\d+)/);
-                    return match ? parseInt(match[1]) : 0;
-                }),
-                0
-            );
-            const newUserId = `U${String(maxUserId + 1).padStart(3, '0')}`;
-            
+
+            const maxUserId = Math.max(...registrationData.map(r => {
+                const m = r['ユーザーID'] ? r['ユーザーID'].match(/U(\d+)/) : null;
+                return m ? parseInt(m[1]) : 0;
+            }), 0);
+            const newUserId = 'U' + String(maxUserId + 1).padStart(3, '0');
             const maxOrgId = Math.max(...orgData.map(o => parseInt(o['ID']) || 0), 0);
             const newOrgId = maxOrgId + 1;
-            
+
             registrationData.push({
                 'ユーザーID': newUserId,
                 'ユーザー名': u,
@@ -319,44 +263,39 @@
                 '組織ID': String(newOrgId),
                 '上司ID': String(bossId)
             });
-            
+
             orgData.push({
                 'ID': String(newOrgId),
                 '名前': u,
                 '上司ID': String(bossId),
                 'ユーザーID': newUserId
             });
-            
+
             saveData();
-            suc.textContent = `ユーザー「${u}」を登録しました。ログイン画面からログインしてください。`;
-            
+            suc.textContent = 'ユーザー「' + u + '」を登録しました。ログイン画面からログインしてください。';
             document.getElementById('regUsername').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regBoss').value = '';
-            
             populateBossDropdown();
         }
-        
+
         function showOrgChart() {
             document.getElementById('loginScreen').classList.remove('active');
             document.getElementById('orgChartScreen').classList.add('active');
-            
             const isAdmin = currentUser['権限'] === 'admin';
             document.getElementById('adminButtons').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('userLogoutBtn').style.display = isAdmin ? 'none' : 'block';
-            
-            document.getElementById('userInfo').textContent = `ユーザー: ${currentUser['ユーザー名']} (${currentUser['権限']})`;
-            
+            document.getElementById('userInfo').textContent = 'ユーザー: ' + currentUser['ユーザー名'] + ' (' + currentUser['権限'] + ')';
             displayOrgChart();
         }
-        
+
         function displayOrgChart() {
             const tree = document.getElementById('orgTree');
             tree.innerHTML = '';
             const ceos = orgData.filter(o => o['上司ID'] === '0' || !o['上司ID']);
             ceos.forEach(ceo => tree.appendChild(createTreeNode(ceo)));
         }
-        
+
         function createTreeNode(org) {
             const node = document.createElement('div');
             node.className = 'tree-node';
@@ -368,187 +307,106 @@
             name.textContent = org['名前'] || '名前なし';
             
             const id = document.createElement('p');
-            id.textContent = `ID: ${org['ID']}`;
+            id.textContent = 'ID: ' + org['ID'];
             
             const userId = document.createElement('div');
             userId.className = 'user-id';
-            userId.textContent = `ユーザーID: ${org['ユーザーID'] || '-'}`;
+            userId.textContent = 'ユーザーID: ' + (org['ユーザーID'] || '-');
             
             box.appendChild(name);
             box.appendChild(id);
             box.appendChild(userId);
-            
+
             if (currentUser['権限'] === 'admin') {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = '削除';
-                deleteBtn.style.marginTop = '5px';
-                deleteBtn.style.padding = '5px 10px';
-                deleteBtn.style.fontSize = '11px';
-                deleteBtn.onclick = () => deleteMember(org['ID']);
-                box.appendChild(deleteBtn);
+                const del = document.createElement('button');
+                del.textContent = '削除';
+                del.style.marginTop = '5px';
+                del.style.padding = '5px 10px';
+                del.style.fontSize = '11px';
+                del.onclick = function() { deleteMember(org['ID']); };
+                box.appendChild(del);
             }
-            
+
             node.appendChild(box);
-            
+
             if (currentUser['権限'] === 'general' && org['ID'] !== currentUser['組織ID']) {
                 return node;
             }
-            
+
             const subs = orgData.filter(o => o['上司ID'] === org['ID']);
-            if (subs.length) {
+            if (subs.length > 0) {
                 const childDiv = document.createElement('div');
                 childDiv.className = 'node-children';
-                
-                subs.forEach((s, index) => {
-                    const childWrapper = document.createElement('div');
-                    const label = document.createElement('div');
-                    label.className = 'child-label';
-                    label.textContent = index === 0 ? '（左）' : '（右）';
-                    childWrapper.appendChild(label);
-                    childWrapper.appendChild(createTreeNode(s));
-                    childDiv.appendChild(childWrapper);
+                subs.forEach((s, i) => {
+                    const wrapper = document.createElement('div');
+                    const lbl = document.createElement('div');
+                    lbl.className = 'child-label';
+                    lbl.textContent = i === 0 ? '（左）' : '（右）';
+                    wrapper.appendChild(lbl);
+                    wrapper.appendChild(createTreeNode(s));
+                    childDiv.appendChild(wrapper);
                 });
-                
                 node.appendChild(childDiv);
             }
-            
+
             return node;
         }
-        
+
         function openAddModal() {
-            populateBossDropdown();
-            document.getElementById('addMemberModal').classList.add('active');
-        }
-        
-        function closeAddModal() {
-            document.getElementById('addMemberModal').classList.remove('active');
+            document.getElementById('addModal').classList.add('active');
+            document.getElementById('addError').textContent = '';
+            document.getElementById('addSuccess').textContent = '';
             document.getElementById('newMemberName').value = '';
-            document.getElementById('newMemberBoss').value = '';
-            document.getElementById('addMemberError').textContent = '';
         }
-        
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+        }
+
         function addMember() {
             const name = document.getElementById('newMemberName').value.trim();
             const bossId = document.getElementById('newMemberBoss').value;
-            const err = document.getElementById('addMemberError');
-            
+            const err = document.getElementById('addError');
+            const suc = document.getElementById('addSuccess');
+
             err.textContent = '';
-            
+            suc.textContent = '';
+
             if (!name || !bossId) {
                 err.textContent = '全てのフィールドを入力してください';
                 return;
             }
-            
+
             const childrenCount = orgData.filter(o => o['上司ID'] === bossId).length;
             if (childrenCount >= 2) {
-                err.textContent = 'このユーザーの配下は既に満員です（最大2人まで）';
+                err.textContent = 'この上司の配下は既に満員です（最大2人まで）';
                 return;
             }
-            
-            const maxId = Math.max(...orgData.map(o => parseInt(o['ID']) || 0), 0);
-            const newId = maxId + 1;
-            
+
+            const maxOrgId = Math.max(...orgData.map(o => parseInt(o['ID']) || 0), 0);
+            const newOrgId = maxOrgId + 1;
+
             orgData.push({
-                'ID': String(newId),
+                'ID': String(newOrgId),
                 '名前': name,
-                '上司ID': String(bossId)
+                '上司ID': String(bossId),
+                'ユーザーID': ''
             });
-            
+
             saveData();
-            closeAddModal();
+            suc.textContent = 'メンバー「' + name + '」を追加しました';
             displayOrgChart();
+            setTimeout(() => closeAddModal(), 1500);
         }
-        
-        function deleteMember(id) {
+
+        function deleteMember(memberId) {
             if (confirm('このメンバーを削除しますか？')) {
-                orgData = orgData.filter(o => o['ID'] !== id);
+                orgData = orgData.filter(o => o['ID'] !== memberId);
                 saveData();
                 displayOrgChart();
             }
         }
-        
-        function openExportModal() {
-            document.getElementById('exportModal').classList.add('active');
-        }
-        
-        function closeExportModal() {
-            document.getElementById('exportModal').classList.remove('active');
-        }
-        
-        function exportOrgData() {
-            const csv = ['ID,名前,上司ID,ユーザーID', ...orgData.map(o => `${o['ID']},${o['名前']},${o['上司ID']},${o['ユーザーID'] || ''}`)].join('\n');
-            downloadCSV(csv, 'orgdata.csv');
-        }
-        
-        function exportUserData() {
-            const csv = ['ユーザーID,ユーザー名,パスワード,権限,組織ID,上司ID',
-                ...registrationData.map(r => `${r['ユーザーID']},${r['ユーザー名']},${r['パスワード']},${r['権限']},${r['組織ID']},${r['上司ID']}`)].join('\n');
-            downloadCSV(csv, 'userdata.csv');
-        }
-        
-        function downloadCSV(csv, filename) {
-            const bom = '\uFEFF';
-            const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-        }
-        
-        function openImportModal() {
-            document.getElementById('importModal').classList.add('active');
-        }
-        
-        function closeImportModal() {
-            document.getElementById('importModal').classList.remove('active');
-            document.getElementById('importFile').value = '';
-            document.getElementById('importError').textContent = '';
-            document.getElementById('importSuccess').textContent = '';
-        }
-        
-        function importData() {
-            const file = document.getElementById('importFile').files[0];
-            if (!file) {
-                document.getElementById('importError').textContent = 'ファイルを選択してください';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.replace('\uFEFF', '').trim().split('\n');
-                    
-                    if (lines[0].includes('上司ID') && !lines[0].includes('ユーザー名')) {
-                        const headers = lines[0].split(',').map(h => h.trim());
-                        orgData = lines.slice(1).filter(l => l.trim()).map(line => {
-                            const cells = line.split(',');
-                            const obj = {};
-                            headers.forEach((h, i) => obj[h] = cells[i]?.trim() || '');
-                            return obj;
-                        });
-                    } else {
-                        const headers = lines[0].split(',').map(h => h.trim());
-                        registrationData = lines.slice(1).filter(l => l.trim()).map(line => {
-                            const cells = line.split(',');
-                            const obj = {};
-                            headers.forEach((h, i) => obj[h] = cells[i]?.trim() || '');
-                            return obj;
-                        });
-                    }
-                    
-                    saveData();
-                    document.getElementById('importSuccess').textContent = 'データをインポートしました';
-                    setTimeout(() => closeImportModal(), 1500);
-                    displayOrgChart();
-                    populateBossDropdown();
-                } catch (err) {
-                    document.getElementById('importError').textContent = 'ファイルの形式が正しくありません';
-                }
-            };
-            reader.readAsText(file, 'utf-8');
-        }
-        
+
         function logout() {
             currentUser = null;
             document.getElementById('orgChartScreen').classList.remove('active');
