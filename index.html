@@ -310,15 +310,16 @@
                 'ユーザー名': u,
                 'パスワード': p,
                 '権限': 'general',
-                '組織ID': newOrgId,
-                '上司ID': bossId
+                '組織ID': String(newOrgId),
+                '上司ID': String(bossId)
             });
             
             // Add to org chart
             orgData.push({
                 'ID': String(newOrgId),
                 '名前': u,
-                '上司ID': String(bossId)
+                '上司ID': String(bossId),
+                'ユーザーID': newUserId
             });
             
             saveData();
@@ -481,7 +482,7 @@
         }
         
         function exportOrgData() {
-            const csv = ['ID,名前,上司ID', ...orgData.map(o => `${o['ID']},${o['名前']},${o['上司ID']}`)].join('\n');
+            const csv = ['ID,名前,上司ID,ユーザーID', ...orgData.map(o => `${o['ID']},${o['名前']},${o['上司ID']},${o['ユーザーID'] || ''}`)].join('\n');
             downloadCSV(csv, 'orgdata.csv');
         }
         
@@ -525,7 +526,7 @@
                     const csv = e.target.result;
                     const lines = csv.replace('\uFEFF', '').trim().split('\n');
                     
-                    if (lines[0].includes('上司ID')) {
+                    if (lines[0].includes('上司ID') && !lines[0].includes('ユーザー名')) {
                         // Organization data
                         const headers = lines[0].split(',').map(h => h.trim());
                         orgData = lines.slice(1).filter(l => l.trim()).map(line => {
@@ -535,7 +536,7 @@
                             return obj;
                         });
                     } else {
-                        // User data
+                        // User registration data
                         const headers = lines[0].split(',').map(h => h.trim());
                         registrationData = lines.slice(1).filter(l => l.trim()).map(line => {
                             const cells = line.split(',');
@@ -549,6 +550,7 @@
                     document.getElementById('importSuccess').textContent = 'データをインポートしました';
                     setTimeout(() => closeImportModal(), 1500);
                     displayOrgChart();
+                    populateBossDropdown();
                 } catch (err) {
                     document.getElementById('importError').textContent = 'ファイルの形式が正しくありません';
                 }
