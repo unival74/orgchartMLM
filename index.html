@@ -44,12 +44,13 @@
         .modal-content .form-group { margin-bottom: 15px; }
         .modal-content button { margin-top: 15px; }
         .modal-close { text-align: right; cursor: pointer; color: #999; font-size: 20px; margin-bottom: 10px; }
+        textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; font-family: monospace; min-height: 150px; }
         @media (max-width: 768px) {
             .container { padding: 10px; }
             .login-form { max-width: 100%; }
             .header { flex-direction: column; align-items: flex-start; }
             .button-group-header { width: 100%; }
-            .button-group-header button { flex: 1; }
+            .button-group-header button { flex: 1; font-size: 11px; padding: 6px 8px; }
             .node-box { min-width: 110px; padding: 10px 12px; font-size: 12px; }
             .node-box h3 { font-size: 12px; }
         }
@@ -98,13 +99,16 @@
                 <div><h1>組織図</h1><p class="user-info" id="userInfo"></p></div>
                 <div class="button-group-header" id="adminButtons" style="display: none;">
                     <button onclick="openAddModal()">メンバー追加</button>
-                    <button onclick="logout()" style="background: #f44336;">ログアウト</button>
+                    <button onclick="openExportModal()">エクスポート</button>
+                    <button onclick="openImportModal()">インポート</button>
+                    <button class="logout-btn" onclick="logout()" style="background: #f44336;">ログアウト</button>
                 </div>
                 <button class="logout-btn" id="userLogoutBtn" onclick="logout()" style="background: #f44336; display: none;">ログアウト</button>
             </div>
             <div class="org-tree" id="orgTree"></div>
         </div>
     </div>
+    <!-- Add Member Modal -->
     <div class="modal" id="addModal">
         <div class="modal-content">
             <div class="modal-close" onclick="closeAddModal()">×</div>
@@ -120,6 +124,30 @@
             <button onclick="addMember()">追加</button>
             <div class="error" id="addError"></div>
             <div class="success" id="addSuccess"></div>
+        </div>
+    </div>
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeExportModal()">×</div>
+            <h2>データエクスポート</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">以下のテキストをコピーして、別のデバイスでインポートしてください</p>
+            <textarea id="exportText" readonly></textarea>
+            <button onclick="copyToClipboard()">クリップボードにコピー</button>
+            <button onclick="downloadCSV()" style="background: #2196F3; margin-top: 10px;">CSV ダウンロード</button>
+            <div class="success" id="exportSuccess"></div>
+        </div>
+    </div>
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeImportModal()">×</div>
+            <h2>データインポート</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">エクスポートされたテキストを貼り付けてください</p>
+            <textarea id="importText" placeholder="エクスポートされたデータを貼り付けてください"></textarea>
+            <button onclick="importData()">インポート</button>
+            <div class="error" id="importError"></div>
+            <div class="success" id="importSuccess"></div>
         </div>
     </div>
     <script>
@@ -179,7 +207,7 @@
 
         function populateBossDropdown() {
             const bosses = orgData.map(o => ({ id: o['ID'], name: o['名前'] }));
-            const options = bosses.map(b => `<option value="${b.id}">${b.name} (ID: ${b.id})</option>`).join('');
+            const options = bosses.map(b => '<option value="' + b.id + '">' + b.name + ' (ID: ' + b.id + ')</option>').join('');
             document.getElementById('regBoss').innerHTML = '<option value="">-- 上司を選択してください --</option>' + options;
             const newBossSelect = document.getElementById('newMemberBoss');
             if (newBossSelect) {
@@ -395,6 +423,7 @@
 
             saveData();
             suc.textContent = 'メンバー「' + name + '」を追加しました';
+            populateBossDropdown();
             displayOrgChart();
             setTimeout(() => closeAddModal(), 1500);
         }
@@ -404,6 +433,81 @@
                 orgData = orgData.filter(o => o['ID'] !== memberId);
                 saveData();
                 displayOrgChart();
+            }
+        }
+
+        function openExportModal() {
+            const exportData = {
+                users: userData,
+                org: orgData,
+                registration: registrationData
+            };
+            document.getElementById('exportText').value = JSON.stringify(exportData, null, 2);
+            document.getElementById('exportModal').classList.add('active');
+            document.getElementById('exportSuccess').textContent = '';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('exportText');
+            text.select();
+            document.execCommand('copy');
+            document.getElementById('exportSuccess').textContent = 'クリップボードにコピーしました';
+        }
+
+        function downloadCSV() {
+            let csv = 'ID,名前,上司ID,ユーザーID\n';
+            orgData.forEach(org => {
+                csv += org['ID'] + ',' + org['名前'] + ',' + org['上司ID'] + ',' + (org['ユーザーID'] || '') + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orgchart.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function openImportModal() {
+            document.getElementById('importModal').classList.add('active');
+            document.getElementById('importText').value = '';
+            document.getElementById('importError').textContent = '';
+            document.getElementById('importSuccess').textContent = '';
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+        }
+
+        function importData() {
+            const text = document.getElementById('importText').value.trim();
+            const err = document.getElementById('importError');
+            const suc = document.getElementById('importSuccess');
+
+            err.textContent = '';
+            suc.textContent = '';
+
+            if (!text) {
+                err.textContent = 'データを貼り付けてください';
+                return;
+            }
+
+            try {
+                const importedData = JSON.parse(text);
+                userData = importedData.users || userData;
+                orgData = importedData.org || orgData;
+                registrationData = importedData.registration || registrationData;
+                saveData();
+                suc.textContent = 'データをインポートしました';
+                populateBossDropdown();
+                displayOrgChart();
+                setTimeout(() => closeImportModal(), 1500);
+            } catch(e) {
+                err.textContent = 'データ形式が正しくありません: ' + e.message;
             }
         }
 
