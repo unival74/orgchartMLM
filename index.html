@@ -9,10 +9,21 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 10px; }
         .container { max-width: 100%; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.1); padding: 20px; }
         
-        .screen { display: none; }
-        .screen.active { display: block; }
+        .screen { display: none !important; }
+        .screen.active { display: block !important; }
         
-        .login-screen { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-screen { 
+            min-height: 100vh; 
+            display: flex !important; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        .login-screen.active {
+            display: flex !important;
+        }
+        
         .login-form { width: 100%; max-width: 300px; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,.1); }
         .login-form h1 { font-size: 24px; margin-bottom: 20px; text-align: center; color: #333; }
         .form-group { margin-bottom: 15px; }
@@ -174,7 +185,6 @@
         let orgData = [];
         let registrationData = [];
         
-        // 初期データ
         const defaultData = {
             users: [
                 { 'ユーザー名': 'admin1', 'パスワード': 'pass123', '権限': 'admin', '組織ID': '1' },
